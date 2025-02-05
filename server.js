@@ -10,9 +10,7 @@ const { QueryTypes } = require('sequelize');
 // route
 const routes = require('./routes')
 
-//error handler
-const catchAsync = require('./utils/catchAsync');
-const AppError = require('./utils/appError');
+//error handle
 
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
