@@ -15,13 +15,11 @@ class SignupController {
         if (!fullname || !email || !password) {
             return next(new AppError('Semua kolom (name, email, password) wajib diisi', 400));
         }
-
         // Cek apakah email sudah digunakan
         const existingUser = await this._model.findOne({ where: { email } });
         if (existingUser) {
             return next(new AppError('Email sudah terdaftar, gunakan email lain', 400));
         }
-
         // Simpan data
         const data = await this._model.create(req.body);
         if (!data) {
