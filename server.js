@@ -5,7 +5,6 @@ const env = dotenv.config().parsed;
 
 //orm sequelize
 const { sequelize } = require('./config/database');
-const { QueryTypes } = require('sequelize');
 
 // route
 const routes = require('./routes')
