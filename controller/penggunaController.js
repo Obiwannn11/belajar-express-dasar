@@ -40,11 +40,20 @@ class SignupController {
             email,
             phone,
             password: hashedPassword,
-            status: status || 'belum', // Default "belum" jika tidak diisi
+            status: 'belum', // Default "belum" jika tidak diisi
         });
 
         // Buat token verifikasi email
-        const verificationToken = generateToken({ id: newUser.id });
+        // Buat OTP 6 digit
+        const otpCode = generateOTP();
+        const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 menit
+
+        // Simpan OTP ke database
+        await OTP.create({
+            user_id: newUser.id,
+            otp: otpCode,
+            otp_expiry: otpExpiry
+        });
 
         // Kirim email dengan Nodemailer
         const transporter = nodemailer.createTransport({
@@ -54,19 +63,21 @@ class SignupController {
                 pass: process.env.EMAIL_PASSWORD, // Password email pengirim
             },
         });
-        
 
-        const verificationLink = `${process.env.FRONTEND_URL}/register/verify-email?token=${verificationToken}`;
+
+        const verificationLink = `${process.env.FRONTEND_URL}/register/verify-email?token=${otpCode}`;
 
         await transporter.sendMail({
             from: process.env.EMAIL_USER,
             to: newUser.email,
             subject: 'Verifikasi Akun Anda',
             html: `<p>Silakan klik link di bawah ini untuk verifikasi akun Anda:</p>
-                   <a href="${verificationLink}">${verificationLink}</a>`,
+                   <a href="${verificationLink}">Klik disini</a>
+                   <br>
+                   atau Copy Link ini ${verificationLink}  
+                   <br>
+                   `,
         });
-
-
 
 
         return res.status(201).json({
