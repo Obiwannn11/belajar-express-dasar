@@ -2,6 +2,10 @@ const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const bcrypt = require('bcrypt');
 const registrationSchema = require('../validation/penggunaValidation');
+const nodemailer = require('nodemailer');
+const { generateToken, verifyToken } = require('../utils/jwt');
+const dotenv = require('dotenv');
+const env = dotenv.config();
 
 
 class SignupController {
@@ -39,10 +43,61 @@ class SignupController {
             status: status || 'belum', // Default "belum" jika tidak diisi
         });
 
+        // Buat token verifikasi email
+        const verificationToken = generateToken({ id: newUser.id });
+
+        // Kirim email dengan Nodemailer
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_ADDRESS, // Email pengirim
+                pass: process.env.EMAIL_PASSWORD, // Password email pengirim
+            },
+        });
+
+        const verificationLink = `${process.env.FRONTEND_URL}/register/verify-email?token=${verificationToken}`;
+
+        await transporter.sendMail({
+            from: process.env.EMAIL_USER,
+            to: newUser.email,
+            subject: 'Verifikasi Akun Anda',
+            html: `<p>Silakan klik link di bawah ini untuk verifikasi akun Anda:</p>
+                   <a href="${verificationLink}">${verificationLink}</a>`,
+        });
+
+
+
+
         return res.status(201).json({
             status: true,
-            message: 'Akun pengguna berhasil didaftarkan',
+            message: 'Akun pengguna berhasil didaftarkan, silahkan cek email untuk verifikasi',
             newUser
+        });
+    });
+
+    verifyEmail = catchAsync(async (req, res, next) => {
+        const { token } = req.query;
+        console.log(token)
+
+        if (!token) {
+            return next(new AppError('Token verifikasi tidak valid', 400));
+        }
+
+        const decoded = await verifyToken(token);
+
+        // Cari user berdasarkan ID dari token
+        const user = await this._model.findByPk(decoded.id);
+        if (!user) {
+            return next(new AppError('Pengguna tidak ditemukan', 404));
+        }
+
+        // Ubah status menjadi "sudah"
+        user.status = 'sudah';
+        await user.save();
+
+        return res.status(200).json({
+            status: true,
+            message: 'Verifikasi email berhasil, Anda dapat login sekarang',
         });
     });
 
