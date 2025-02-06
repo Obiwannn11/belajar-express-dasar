@@ -2,6 +2,8 @@ const bcrypt = require('bcrypt');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const loginSchema = require('../validation/loginValidation');
+const { generateToken, verifyToken } = require('../utils/jwt');
+
 
 class LoginController {
     constructor(model) {
@@ -23,11 +25,20 @@ class LoginController {
             return next(new AppError('Email tidak terdaftar', 400));
         }
 
+        // Periksa apakah pengguna sudah verifikasi
+        if (user.status !== 'sudah') {
+            return next(new AppError('Silakan verifikasi email sebelum login', 400));
+        }
+
         // Periksa kecocokan password
         const isPasswordCorrect = await bcrypt.compare(password, user.password);
         if (!isPasswordCorrect) {
             return next(new AppError('Password salah', 400));
         }
+
+        // Buat token JWT untuk sesi login
+        const token = generateToken({ id: user.id });
+
 
         return res.status(200).json({
             status: true,
