@@ -54,6 +54,7 @@ class SignupController {
                 pass: process.env.EMAIL_PASSWORD, // Password email pengirim
             },
         });
+        
 
         const verificationLink = `${process.env.FRONTEND_URL}/register/verify-email?token=${verificationToken}`;
 
