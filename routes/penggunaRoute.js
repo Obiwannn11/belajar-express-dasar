@@ -5,13 +5,14 @@ const SignupController = require('../controller/penggunaController.js')
 
 const Signup = (model) => {
     const router = express.Router()
-    const Signup = new SignupController(model)
+    const SignUp = new SignupController(model)
 
-    router.get('/', Signup.index)
-    // router.get('/:id', Index.show)
-    router.post('/', Signup.store)
-    // router.put('/:id', Index.update)
+    //cek isi database
+    router.get('/', SignUp.index)
+    router.post('/', SignUp.store)
     // router.delete('/:id', Index.delete)
+
+    router.get('/verify-email', SignUp.verifyEmail);    
 
     return router;
 
