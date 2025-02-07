@@ -12,8 +12,6 @@ const Signup = (model) => {
     router.post('/', SignUp.store)
     // router.delete('/:id', Index.delete)
 
-    router.get('/verify-email', SignUp.verifyEmail);    
-
     return router;
 
 }
