@@ -2,6 +2,7 @@ const express = require('express');
 const dotenv = require('dotenv');
 const app = express();
 const env = dotenv.config().parsed;
+const cors = require('cors');
 
 //orm sequelize
 const { sequelize } = require('./config/database');
@@ -13,6 +14,11 @@ const routes = require('./routes')
 
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
+app.use(cors({
+    origin: "*",
+    methods: "GET,HEAD,POST,PUT,PATCH,DELETE",
+    credentials: true,
+}));
 
 app.listen(env.PORT, () => {
     console.log(`Server Berjalan di Port ${env.PORT}`)
