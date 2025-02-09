@@ -9,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // Menetapkan bahwa OTP milik User
-      OTP.belongsTo(models.Penggunas, { foreignKey: 'user_id' }); //menetapkan relasi 
+      OTP.belongsTo(models.Pengguna, { foreignKey: 'user_id' }); //menetapkan relasi 
       //belongsTo artinya 1 row OTP bisa dimiliki oleh 1 user, tetapi user bisa memiliki banyak row otp  
     }
   }
