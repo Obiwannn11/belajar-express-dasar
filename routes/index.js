@@ -3,10 +3,10 @@ const express = require('express');
 const IndexCRUD = require('./indexRoute'); // Pastikan path sesuai
 const Signup = require('./penggunaRoute'); // Pastikan path sesuai
 const Login = require('./loginRoute'); // Pastikan path sesuai
+const otp = require('./otpRoutes'); // Pastikan path sesuai
 
 //model
-const { User } = require('../database/models'); // Pastikan ini benar
-const { Pengguna } = require('../database/models'); // Pastikan ini benar
+const { User, Pengguna, OTP} = require('../database/models'); // Pastikan ini benar
 
 const router = express.Router();
 
@@ -15,6 +15,7 @@ router.use('/user', IndexCRUD(User));
 // router.use('/login', IndexCRUD(User));
 router.use('/register', Signup(Pengguna));
 router.use('/login', Login(Pengguna));
+router.use('/verify', otp(OTP));
 
 
 
