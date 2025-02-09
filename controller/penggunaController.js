@@ -4,8 +4,12 @@ const bcrypt = require('bcrypt');
 const registrationSchema = require('../validation/penggunaValidation');
 const nodemailer = require('nodemailer');
 const { generateToken, verifyToken } = require('../utils/jwt');
+const  generateOTP  = require('../utils/generateOtp');
 const dotenv = require('dotenv');
 const env = dotenv.config();
+
+// impor model otp 
+const {OTP} = require('../database/models')
 
 
 class SignupController {
@@ -45,6 +49,7 @@ class SignupController {
 
         // Buat token verifikasi email
         // Buat OTP 6 digit
+        // console.log(OTP); // Harus menunjukkan objek model OTP, bukan undefined
         const otpCode = generateOTP();
         const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 menit
 
@@ -65,7 +70,7 @@ class SignupController {
         });
 
 
-        const verificationLink = `${process.env.FRONTEND_URL}/register/verify-email?token=${otpCode}`;
+        const verificationLink = `${process.env.FRONTEND_URL}verify?token=${otpCode}`;
 
         await transporter.sendMail({
             from: process.env.EMAIL_USER,
@@ -87,25 +92,44 @@ class SignupController {
         });
     });
 
-    verifyEmail = catchAsync(async (req, res, next) => {
+    verifyOtp = catchAsync(async (req, res, next) => {
         const { token } = req.query;
         console.log(token)
 
         if (!token) {
-            return next(new AppError('Token verifikasi tidak valid', 400));
+            return next(new AppError('Token verifikasi tidak Ada', 400));
         }
 
-        const decoded = await verifyToken(token);
+        // const decoded = await verifyToken(token);
 
         // Cari user berdasarkan ID dari token
-        const user = await this._model.findByPk(decoded.id);
-        if (!user) {
-            return next(new AppError('Pengguna tidak ditemukan', 404));
+        // const user = await this._model.findByPk(decoded.user_id);
+        // if (!user) {
+        //     return next(new AppError('Pengguna tidak ditemukan', 404));
+        // }
+
+        // Cek OTP di database
+        const otpRecord = await OTP.findOne({
+            where: { user_id: user.id, otp },
+        });
+
+        if (!otpRecord) {
+            return res.status(400).json({ message: 'OTP tidak valid' });
         }
+
+        // Cek apakah OTP masih berlaku
+        if (new Date() > otpRecord.otp_expiry) {
+            return res.status(400).json({ message: 'OTP sudah kadaluarsa' });
+        }
+
 
         // Ubah status menjadi "sudah"
         user.status = 'sudah';
         await user.save();
+
+         // Hapus OTP setelah verifikasi berhasil
+         await otpRecord.destroy();
+
 
         return res.status(200).json({
             status: true,
